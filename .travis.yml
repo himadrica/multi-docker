@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t himadrica/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run himadrica/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t himadrica/multi-client ./client
+  - docker build -t himadrica/multi-nginx ./nginx
+  - docker build -t himadrica/multi-server ./server
+  - docker build -t himadrica/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images push them to docekr hub
+  - docker push himadrica/multi-client
+  - docker push himadrica/multi-nginx
+  - docker push himadrica/multi-server
+  - docker push himadrica/multi-worker
